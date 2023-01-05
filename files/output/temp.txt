@@ -1,0 +1,2 @@
+just to keep the output folder here in git.
+The program will not execute correctly without it.
