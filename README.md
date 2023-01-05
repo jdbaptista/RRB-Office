@@ -4,6 +4,11 @@ This is business software for small construction companies. If you plan to use t
 
 That said, this program quickly generates nicely printable excel workbooks filled with reports about client and material costs which is useful in rough estimates of billing and analysis of project effectiveness. Take a look at the files folder for example input and output.
 
+EXAMPLE OUTPUT:
+![jobsite1](https://user-images.githubusercontent.com/18275346/210695499-0ea66353-48ca-43c9-9315-1dd3d727841e.png)
+![jobsite_total_1](https://user-images.githubusercontent.com/18275346/210695505-0479cc98-7c7b-41bf-81a5-8324df064706.png)
+
+
 This program was written in Java and Apache POI, and as such requires Java 17+ to be downloaded to your computer. I have hardcoded the file locations as relative to the .jar file, so be sure not to move input files around, and download the program to a folder that is not reserved by the OS (ex. downloads, programs). To change the file locations, refer to the GUI controller.
 
 Feel free to reach out if there are any questions :).
