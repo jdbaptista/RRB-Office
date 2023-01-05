@@ -1,4 +1,5 @@
 # RRB-Office
+This program was written for RRB Construction in 2021, and was ported to this repo later. Original commits are in a private repo.
 
 This is business software for small construction companies. If you plan to use this in production, be sure to know that this code is not well tested nor has any internal testing whatsoever. The testing that has been done was through manager scrutiny of numbers. The program's intended use is in quickly generating reports that are then confirmed by a manager. THERE ARE KNOWN BUGS IN THIS CODE (primarily small formatting errors). This public repo in particular was ported over from a private repo where known bugs were squashed. If you intend to use this, either extend it with testing yourself, or reach out to me for more up to date code and then test it yourself. I'm not responsible for any issues arising from use of this program.
 
