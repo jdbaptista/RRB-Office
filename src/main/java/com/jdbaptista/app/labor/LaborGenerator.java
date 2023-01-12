@@ -1,7 +1,6 @@
 package com.jdbaptista.app.labor;
 
 import com.jdbaptista.app.labor.error.DatedTableException;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -29,6 +28,7 @@ public class LaborGenerator {
     final private OutputStreamWriter outputLog;
     // static attributes
     final private HashMap<Job, XSSFWorkbook> jobs;
+    //TODO: Change this to DatedTableData (how is this not...)
     final private HashMap<LocalDate, HashMap<String, Double>> salaries;
 
     public LaborGenerator(LaborGeneratorBuilder builder) {
@@ -46,6 +46,10 @@ public class LaborGenerator {
         salaries = new HashMap<>();
     }
 
+    /**
+     * Entry point for program execution and report generation.
+     * @throws IOException
+     */
     public void run() throws IOException {
         try {
             long startTime = System.nanoTime();
@@ -78,7 +82,7 @@ public class LaborGenerator {
 
             startTime = System.nanoTime();
             System.out.println("Generating reports...");
-            generateFile();
+            generateFiles();
             endTime = System.nanoTime();
             duration = (endTime - startTime) / 1000000;
             System.out.println("Process finished in " + duration + "ms.");
@@ -89,18 +93,17 @@ public class LaborGenerator {
         outputLog.flush();
     }
 
+    /**
+     * Loads values of worker compensation values from {@link LaborGenerator#workCompFile}.
+     * @return The data loaded into a {@link DatedTableData} structure.
+     * @throws Exception
+     */
     private DatedTableData<Integer, Double> getWorkComp() throws Exception {
         DatedTableData<Integer, Double> wcData = new DatedTableData<>();
-
-        long start = System.nanoTime();
         // get proper sheet
         XSSFWorkbook wb = new XSSFWorkbook(workCompFile);
         Sheet sheet = wb.getSheetAt(0);
         Iterator<Row> rowIter = sheet.iterator();
-        long end = System.nanoTime();
-        System.out.println((end - start) / 1000000);
-
-        start = System.nanoTime();
         // load map with wc codes
         Row codeRow = rowIter.next();
         Iterator<Cell> codeCellIter = codeRow.cellIterator();
@@ -111,10 +114,6 @@ public class LaborGenerator {
             int code = (int) codeCell.getNumericCellValue();
             wcData.addColumn(code, codeCell.getColumnIndex());
         }
-        end = System.nanoTime();
-        System.out.println((end - start) / 1000000);
-
-        start = System.nanoTime();
         // load map with percentages
         while (rowIter.hasNext()) {
             Row percentageRow = rowIter.next();
@@ -127,12 +126,13 @@ public class LaborGenerator {
                 wcData.addRangeByColNum(curr.getColumnIndex(), percentage, date);
             }
         }
-        end = System.nanoTime();
-        System.out.println((end - start) / 1000000);
-
         return wcData;
     }
 
+    /**
+     * Loads employee salary data from {@link LaborGenerator#salaryFile}.
+     * @throws Exception
+     */
     private void getSalaries() throws Exception {
         Workbook wb = WorkbookFactory.create(salaryFile);
         Sheet sheet = wb.getSheetAt(0);
@@ -176,7 +176,11 @@ public class LaborGenerator {
         }
     }
 
-    private void generateFile() throws IOException {
+    /**
+     * Creates final labor reports in {@link LaborGenerator#outFolder}.
+     * @throws IOException
+     */
+    private void generateFiles() throws IOException {
         try {
             for (Job job : jobs.keySet()) {
                 XSSFWorkbook wb = new XSSFWorkbook();
@@ -191,6 +195,10 @@ public class LaborGenerator {
         outputLog.write("Reports generated successfully.\n");
     }
 
+    /**
+     * Loads shift data from {@link LaborGenerator#inFile}.
+     * @throws IOException
+     */
     private void parseData() throws IOException {
         String nameCell;
         String addressCell;
@@ -255,6 +263,11 @@ public class LaborGenerator {
         }
     }
 
+    /**
+     * Helper function of {@link LaborGenerator#parseData()}. Takes a row of data from {@link LaborGenerator#inFile}
+     * and loads it into a {@link Container}.
+     * @throws Exception
+     */
     private void inputContainer(String name, String address, String date, String task, double time, int type, String multiplier) throws Exception {
         // parse the raw date into usable data.
         // raw date in form 01-Mar-2021.
@@ -320,6 +333,12 @@ public class LaborGenerator {
         return null;
     }
 
+    /**
+     * Populates the {@link Container#tax}, and {@link Container#wc}. Tax percentage is hard coded in
+     * {@link LaborGenerator#calculateTax} :P.
+     * @param wcData Data used to calculate {@link Container#wc}.
+     * @throws Exception
+     */
     private void calculate(DatedTableData<Integer, Double> wcData) throws Exception {
         for (Job job : jobs.keySet()) {
             for (Week month : job.getWeeks()) {
@@ -380,13 +399,20 @@ public class LaborGenerator {
             else
                 break;
         }
-        return ((int) Math.round(container.multiplier * container.time * salaries.get(holdDate).get(container.name) * 100)) / 100d;
+        Double salary = salaries.get(holdDate).get(container.name);
+        return salary * container.time * container.multiplier;
     }
 
     private double calculateTax(Container container) {
+        //TODO: Unhardcode tax percentage.
         return ((int) Math.round(container.amount * 7.7)) / 100d;
     }
 
+    /**
+     * A disgusting function designed to convert Excel date month values to usable integers.
+     * @param month
+     * @return
+     */
     public static int convertMonth(String month) {
         switch (month) {
             case "Jan" -> {

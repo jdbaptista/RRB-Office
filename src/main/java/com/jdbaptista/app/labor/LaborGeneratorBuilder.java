@@ -69,26 +69,52 @@ public class LaborGeneratorBuilder {
         return outputLog;
     }
 
+    /**
+     * Sets the input file containing daily employee shift data. Each row of the file should be formatted as:
+     * (employee name as referred to in {@link LaborGeneratorBuilder#salaryFile}, job/client name, shift date,
+     * task date, hours worked (integer or floating point), worker compensation code as referred to in
+     * {@link LaborGeneratorBuilder#workCompFile}, optional: wage multiplier (defaults to 1.0 and is typically
+     * used for overtime at a value of 1.5).
+     * @param inFile
+     * @return
+     */
     public LaborGeneratorBuilder setInFile(File inFile) {
         this.inFile = inFile;
         return this;
     }
 
+    /**
+     * Sets file containing worker compensation data of {@link DatedTableData} form, where the column label type is
+     * an integer code of the work type and the changing value type is a currency/floating point number describing
+     * the percentage of wage taken by worker's compensation.
+     */
     public LaborGeneratorBuilder setWorkCompFile(File workCompFile) {
         this.workCompFile = workCompFile;
         return this;
     }
 
+    /**
+     * Sets file containing salary data of {@link DatedTableData} form, where the column label type is employee names
+     * as a string, and the changing value type is a currency/floating point number describing hourly wage.
+     */
     public LaborGeneratorBuilder setSalaryFile(File salaryFile) {
         this.salaryFile = salaryFile;
         return this;
     }
 
+    /**
+     * Sets the folder location of where reports will be generated to.
+     */
     public LaborGeneratorBuilder setOutFolder(String outFolder) {
         this.outFolder = outFolder;
         return this;
     }
 
+    /**
+     * An advanced, optional setting.
+     * Sets the output stream where the user log messages will be written to.
+     * Debug and error messages will always end up in the console.
+     */
     public LaborGeneratorBuilder setOutputLog(OutputStream outputLog) {
         this.outputLog = outputLog;
         return this;
