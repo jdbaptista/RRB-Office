@@ -1,9 +1,13 @@
 package com.jdbaptista.app.labor;
 
 import com.jdbaptista.app.labor.error.DatedTableException;
+import org.apache.poi.ss.usermodel.*;
 
+import java.io.File;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * Represents an Excel table in which the rows are {@link LocalDate} in sequential order with last being the most
@@ -116,5 +120,42 @@ public class DatedTableData<T, S> {
             throw new DatedTableException("Date " + date + " is undefined.");
         }
         return curr.getValue();
+    }
+
+    /**
+     * A helper function that shows up occasionally in {@link LaborGenerator}.
+     * @return
+     * @throws Exception
+     */
+    public static DatedTableData<String, Double> loadExcelData(File file) throws IOException, DatedTableException {
+        DatedTableData<String, Double> datedSalaries = new DatedTableData<>();
+        Workbook wb = WorkbookFactory.create(file);
+        Sheet sheet = wb.getSheetAt(0);
+        Iterator<Row> rowIterator = sheet.iterator();
+        Row row = rowIterator.next();
+        Iterator<Cell> cellIterator = row.cellIterator();
+        cellIterator.next(); // empty top left corner cell
+        Cell currCell;
+        // first row of column labels
+        while(cellIterator.hasNext()) {
+            currCell = cellIterator.next();
+            datedSalaries.addColumn(currCell.getStringCellValue(), currCell.getColumnIndex());
+        }
+        // each dated row of values
+        while (rowIterator.hasNext()) {
+            row = rowIterator.next();
+            cellIterator = row.cellIterator();
+            // date cell
+            currCell = cellIterator.next();
+            LocalDate startDate = currCell.getLocalDateTimeCellValue().toLocalDate();
+            // value cells
+            while (cellIterator.hasNext()) {
+                currCell = cellIterator.next();
+                int cellNdx = currCell.getColumnIndex();
+                Double salary = currCell.getNumericCellValue();
+                datedSalaries.addRangeByColNum(cellNdx, salary, startDate);
+            }
+        }
+        return datedSalaries;
     }
 }

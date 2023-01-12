@@ -1,6 +1,5 @@
 package com.jdbaptista.app.labor;
 
-import com.jdbaptista.app.labor.error.DatedTableException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -28,8 +27,6 @@ public class LaborGenerator {
     final private OutputStreamWriter outputLog;
     // static attributes
     final private HashMap<Job, XSSFWorkbook> jobs;
-    //TODO: Change this to DatedTableData (how is this not...)
-    final private HashMap<LocalDate, HashMap<String, Double>> salaries;
 
     public LaborGenerator(LaborGeneratorBuilder builder) {
         // required parameters
@@ -43,7 +40,6 @@ public class LaborGenerator {
 
         // static attributes
         jobs = new HashMap<>();
-        salaries = new HashMap<>();
     }
 
     /**
@@ -54,14 +50,14 @@ public class LaborGenerator {
         try {
             long startTime = System.nanoTime();
             System.out.println("Loading worker comp data...");
-            DatedTableData<Integer, Double> wcData = getWorkComp();
+            DatedTableData<String, Double> wcData = DatedTableData.loadExcelData(workCompFile);
             long endTime = System.nanoTime();
             long duration = (endTime - startTime) / 1000000;
             System.out.println("Process finished in " + duration + "ms.");
 
             startTime = System.nanoTime();
             System.out.println("Loading salary data...");
-            getSalaries();
+            DatedTableData<String, Double> salaryData = DatedTableData.loadExcelData(salaryFile);
             endTime = System.nanoTime();
             duration = (endTime - startTime) / 1000000;
             System.out.println("Process finished in " + duration + "ms.");
@@ -75,7 +71,7 @@ public class LaborGenerator {
 
             startTime = System.nanoTime();
             System.out.println("Calculating report data...");
-            calculate(wcData);
+            calculate(wcData, salaryData);
             endTime = System.nanoTime();
             duration = (endTime - startTime) / 1000000;
             System.out.println("Process finished in " + duration + "ms.");
@@ -91,89 +87,6 @@ public class LaborGenerator {
             e.printStackTrace();
         }
         outputLog.flush();
-    }
-
-    /**
-     * Loads values of worker compensation values from {@link LaborGenerator#workCompFile}.
-     * @return The data loaded into a {@link DatedTableData} structure.
-     * @throws Exception
-     */
-    private DatedTableData<Integer, Double> getWorkComp() throws Exception {
-        DatedTableData<Integer, Double> wcData = new DatedTableData<>();
-        // get proper sheet
-        XSSFWorkbook wb = new XSSFWorkbook(workCompFile);
-        Sheet sheet = wb.getSheetAt(0);
-        Iterator<Row> rowIter = sheet.iterator();
-        // load map with wc codes
-        Row codeRow = rowIter.next();
-        Iterator<Cell> codeCellIter = codeRow.cellIterator();
-        Cell IDCell = codeCellIter.next();
-        if (!IDCell.getStringCellValue().equals("WC")) throw new IOException("WC file incorrectly formatted");
-        for (Iterator<Cell> it = codeCellIter; it.hasNext(); ) {
-            Cell codeCell = it.next();
-            int code = (int) codeCell.getNumericCellValue();
-            wcData.addColumn(code, codeCell.getColumnIndex());
-        }
-        // load map with percentages
-        while (rowIter.hasNext()) {
-            Row percentageRow = rowIter.next();
-            Iterator<Cell> percentageCellIter = percentageRow.cellIterator();
-            LocalDate date = percentageCellIter.next().getLocalDateTimeCellValue().toLocalDate();
-
-            while (percentageCellIter.hasNext()) {
-                Cell curr = percentageCellIter.next();
-                double percentage = curr.getNumericCellValue();
-                wcData.addRangeByColNum(curr.getColumnIndex(), percentage, date);
-            }
-        }
-        return wcData;
-    }
-
-    /**
-     * Loads employee salary data from {@link LaborGenerator#salaryFile}.
-     * @throws Exception
-     */
-    private void getSalaries() throws Exception {
-        Workbook wb = WorkbookFactory.create(salaryFile);
-        Sheet sheet = wb.getSheetAt(0);
-        Iterator<Row> rowIterator = sheet.iterator();
-
-        // confirm the salaries file is correct.
-        Row row = rowIterator.next();
-        Iterator<Cell> cellIterator = row.cellIterator();
-        Cell cell = cellIterator.next();
-        if (!cell.toString().equals("Salaries"))
-            throw new IOException("Salaries file not formatted correctly.");
-
-        ArrayList<String> names = new ArrayList<>();
-        String date;
-        while(cellIterator.hasNext()) {
-            cell = cellIterator.next();
-            names.add(cell.toString());
-        }
-        String[] namesArr = names.toArray(new String[0]);
-        // get values
-        while (rowIterator.hasNext()) {
-            ArrayList<String> values = new ArrayList<>();
-            row = rowIterator.next();
-            cellIterator = row.cellIterator();
-            cell = cellIterator.next();
-            date = cell.toString();
-            if (date.equals("")) {
-                break;
-            }
-            while (cellIterator.hasNext()) {
-                cell = cellIterator.next();
-                values.add(cell.toString());
-                if (cell.toString() == null || cell.toString().equals("")) {
-                    outputLog.write("Salary value is empty at row ");
-                    outputLog.write((row.getRowNum() + 1) + " column ");
-                    outputLog.write((cell.getColumnIndex() + 1) + ".\n");
-                    throw new Exception("");
-                }
-            }
-            addSalaryDate(date, namesArr, values.toArray(new String[0]));
-        }
     }
 
     /**
@@ -205,7 +118,7 @@ public class LaborGenerator {
         String dateCell;
         String taskCell;
         double timeCell;
-        int classCell;
+        String classCell;
         String multiplierCell;
 
         // try to open the input file.
@@ -226,20 +139,20 @@ public class LaborGenerator {
             Cell cell;
             try {
                 cell = cellIterator.next();
-                nameCell = cell.toString().strip();
+                nameCell = cell.getStringCellValue().strip();
                 cell = cellIterator.next();
-                addressCell = cell.toString().strip();
+                addressCell = cell.getStringCellValue().strip();
                 cell = cellIterator.next();
-                dateCell = cell.toString().strip();
+                dateCell = cell.getStringCellValue().strip();
                 cell = cellIterator.next();
-                taskCell = cell.toString().strip();
+                taskCell = cell.getStringCellValue().strip();
                 cell = cellIterator.next();
-                timeCell = Double.parseDouble(cell.toString());
+                timeCell = cell.getNumericCellValue();
                 cell = cellIterator.next();
-                classCell = (int) Double.parseDouble(cell.toString());
+                classCell = cell.getStringCellValue().strip();
                 if (cellIterator.hasNext()) {
                     cell = cellIterator.next();
-                    multiplierCell = cell.toString();
+                    multiplierCell = cell.getStringCellValue().strip();
                 } else {
                     multiplierCell = "";
                 }
@@ -248,7 +161,7 @@ public class LaborGenerator {
                 outputLog.write((row.getRowNum() + 1) + ". Skipped this row.\n");
                 continue;
             }
-            if (nameCell == null || addressCell == null || dateCell == null || taskCell == null || timeCell == -1 || classCell == -1) {
+            if (nameCell == null || addressCell == null || dateCell == null || taskCell == null || timeCell == -1 || classCell == null) {
                 outputLog.write("Row " + row.getRowNum() + " is not formatted correctly.");
                 return;
             }
@@ -268,7 +181,7 @@ public class LaborGenerator {
      * and loads it into a {@link Container}.
      * @throws Exception
      */
-    private void inputContainer(String name, String address, String date, String task, double time, int type, String multiplier) throws Exception {
+    private void inputContainer(String name, String address, String date, String task, double time, String type, String multiplier) throws Exception {
         // parse the raw date into usable data.
         // raw date in form 01-Mar-2021.
         int day;
@@ -334,24 +247,24 @@ public class LaborGenerator {
     }
 
     /**
-     * Populates the {@link Container#tax}, and {@link Container#wc}. Tax percentage is hard coded in
-     * {@link LaborGenerator#calculateTax} :P.
+     * Populates the {@link Container#tax}, and {@link Container#wc}. Tax percentage is hard coded in :P.
      * @param wcData Data used to calculate {@link Container#wc}.
      * @throws Exception
      */
-    private void calculate(DatedTableData<Integer, Double> wcData) throws Exception {
+    private void calculate(DatedTableData<String, Double> wcData, DatedTableData<String, Double> salaryData) throws Exception {
         for (Job job : jobs.keySet()) {
             for (Week month : job.getWeeks()) {
-                for (Container container : month.getContainers()) {
+                for (Container cntr : month.getContainers()) {
                     try {
-                        container.amount = calculatePay(container, container.date);
-                        container.wc = calculateWC(container, container.date, wcData);
-                        container.tax = calculateTax(container);
+                        cntr.amount = salaryData.getValue(cntr.name, cntr.date) * cntr.time * cntr.multiplier;
+                        cntr.wc = ((int) Math.round(cntr.amount * wcData.getValue(cntr.type, cntr.date)) / 100d);
+                        //TODO: Unhardcode tax percentage.
+                        cntr.tax = ((int) Math.round(cntr.amount * 7.7)) / 100d;
                     } catch (Exception e) {
-                        outputLog.write("It is probable that " + container.name);
+                        outputLog.write("It is probable that " + cntr.name);
                         outputLog.write(" is misspelled or missing from the salaries file.\n");
                         e.printStackTrace();
-                        throw new Exception();
+                        throw e;
                     }
                 }
                 month.calculateDailyTotals();
@@ -359,102 +272,4 @@ public class LaborGenerator {
             }
         }
     }
-
-    private void addSalaryDate(String date, String[] names, String[] values) throws Exception {
-        HashMap<String, Double> types = new HashMap<>();
-
-        int day;
-        String month;
-        int intMonth;
-        int year;
-        try {
-            String[] splitDate = date.split("-");
-            day = Integer.parseInt(splitDate[0]);
-            month = splitDate[1];
-            year = Integer.parseInt(splitDate[2]);
-        } catch (Exception e) {
-            throw new Exception("Date is not formatted correctly.");
-        }
-        intMonth = convertMonth(month);
-
-        for (int i = 0; i < names.length; i++) {
-            if (values[i].equals("")) throw new Exception("");
-            types.put(names[i], Double.parseDouble(values[i]));
-        }
-        salaries.put(LocalDate.of(year, intMonth, day), types);
-    }
-
-    private double calculateWC(Container container, LocalDate date, DatedTableData<Integer, Double> wcData) throws DatedTableException {
-        double wcPercentage = wcData.getValue(container.type, date);
-        return ((int) Math.round(container.amount * wcPercentage) / 100d);
-    }
-
-    private double calculatePay(Container container, LocalDate date) {
-        LocalDate holdDate = null;
-        ArrayList<LocalDate> dateChanges = new ArrayList<>(salaries.keySet());
-        Collections.sort(dateChanges);
-        for (LocalDate changeDate : dateChanges) {
-            if (date.isAfter(changeDate))
-                holdDate = changeDate;
-            else
-                break;
-        }
-        Double salary = salaries.get(holdDate).get(container.name);
-        return salary * container.time * container.multiplier;
-    }
-
-    private double calculateTax(Container container) {
-        //TODO: Unhardcode tax percentage.
-        return ((int) Math.round(container.amount * 7.7)) / 100d;
-    }
-
-    /**
-     * A disgusting function designed to convert Excel date month values to usable integers.
-     * @param month
-     * @return
-     */
-    public static int convertMonth(String month) {
-        switch (month) {
-            case "Jan" -> {
-                return 1;
-            }
-            case "Feb" -> {
-                return 2;
-            }
-            case "Mar" -> {
-                return 3;
-            }
-            case "Apr" -> {
-                return 4;
-            }
-            case "May" -> {
-                return 5;
-            }
-            case "Jun" -> {
-                return 6;
-            }
-            case "Jul" -> {
-                return 7;
-            }
-            case "Aug" -> {
-                return 8;
-            }
-            case "Sep" -> {
-                return 9;
-            }
-            case "Oct" -> {
-                return 10;
-            }
-            case "Nov" -> {
-                return 11;
-            }
-            case "Dec" -> {
-                return 12;
-            }
-            default -> {
-                return -1;
-            }
-        }
-    }
-
 }

@@ -9,14 +9,14 @@ public class Container implements Comparable<Container> {
     final public String name;
     final public String task;
     final public double time;
-    final public int type;
+    final public String type;
     final public double multiplier;
     public double amount;
     public double wc;
     public double tax;
 
 
-    public Container(int day, LocalDate date, String name, String task, double time, int type, double multiplier) {
+    public Container(int day, LocalDate date, String name, String task, double time, String type, double multiplier) {
         this.day = day;
         this.date = date;
         this.name = name;
