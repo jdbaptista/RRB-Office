@@ -1,6 +1,7 @@
 package com.jdbaptista.app.labor;
 
 import com.jdbaptista.app.labor.error.DatedTableException;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -105,10 +106,11 @@ public class LaborGenerator {
         Iterator<Cell> codeCellIter = codeRow.cellIterator();
         Cell IDCell = codeCellIter.next();
         if (!IDCell.getStringCellValue().equals("WC")) throw new IOException("WC file incorrectly formatted");
-        codeCellIter.forEachRemaining((codeCell) -> {
-           int code = (int) codeCell.getNumericCellValue();
-           wcData.addCode(code, codeCell.getColumnIndex());
-        });
+        for (Iterator<Cell> it = codeCellIter; it.hasNext(); ) {
+            Cell codeCell = it.next();
+            int code = (int) codeCell.getNumericCellValue();
+            wcData.addColumn(code, codeCell.getColumnIndex());
+        }
         end = System.nanoTime();
         System.out.println((end - start) / 1000000);
 
@@ -122,7 +124,7 @@ public class LaborGenerator {
             while (percentageCellIter.hasNext()) {
                 Cell curr = percentageCellIter.next();
                 double percentage = curr.getNumericCellValue();
-                wcData.addChangeByCol(curr.getColumnIndex(), percentage, date);
+                wcData.addRangeByColNum(curr.getColumnIndex(), percentage, date);
             }
         }
         end = System.nanoTime();
@@ -364,7 +366,7 @@ public class LaborGenerator {
     }
 
     private double calculateWC(Container container, LocalDate date, DatedTableData<Integer, Double> wcData) throws DatedTableException {
-        double wcPercentage = wcData.getPercentage(container.type, date);
+        double wcPercentage = wcData.getValue(container.type, date);
         return ((int) Math.round(container.amount * wcPercentage) / 100d);
     }
 

@@ -11,7 +11,7 @@ public class DatedTableNode<T> {
      * The percentage of worker wage that is used to
      * calculate amount of money owed to worker compensation.
      */
-    final private T percentage;
+    final private T value;
 
     /**
      * The date when this node's percentage takes effect.
@@ -26,12 +26,12 @@ public class DatedTableNode<T> {
     private DatedTableNode<T> next;
 
     public DatedTableNode(T percentage, LocalDate startDate) {
-        this.percentage = percentage;
+        this.value = percentage;
         this.startDate = startDate;
     }
 
-    public T getPercentage() {
-        return percentage;
+    public T getValue() {
+        return value;
     }
 
     public LocalDate getStartDate() {
@@ -43,8 +43,8 @@ public class DatedTableNode<T> {
      * end date of this node. Here to reduce boilerplate.
      */
     public LocalDate getEndDate() {
-        if (next == null) return null;
-        return next.getStartDate();
+        if (hasNext()) return next.getStartDate();
+        return null;
     }
 
     public DatedTableNode<T> getNext() {
