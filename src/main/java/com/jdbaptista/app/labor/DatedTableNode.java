@@ -3,9 +3,7 @@ package com.jdbaptista.app.labor;
 import java.time.LocalDate;
 
 /**
- * A linked-list node that holds information about worker compensation at
- * a given date range. This node is part of the WCData class which is simply
- * an abstraction of the following: HashMap where key: code & val: WCNode.
+ * A linked-list node that holds information about one row within a {@link DatedTableData} instance.
  */
 public class DatedTableNode<T> {
 
@@ -22,7 +20,7 @@ public class DatedTableNode<T> {
 
     /**
      * The successor to this node, which describes the end date of this
-     * node's range. null value indicates this node's percentage is in
+     * node's range. Null value indicates this node's percentage is in
      * effect up to the present.
      */
     private DatedTableNode<T> next;
@@ -41,7 +39,7 @@ public class DatedTableNode<T> {
     }
 
     /**
-     * Simply gets the start date of the next node, which is also the
+     * Gets the start date of the next node, which is also the
      * end date of this node. Here to reduce boilerplate.
      */
     public LocalDate getEndDate() {

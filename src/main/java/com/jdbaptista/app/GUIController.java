@@ -23,11 +23,9 @@ public class GUIController {
         File inFile = new File("files/input/Dailies.xlsx");
         File configFile = new File("files/input/WCPercentages.xlsx");
         File salaryFile = new File("files/input/Salaries.xlsx");
-        XSSFWorkbook load = new XSSFWorkbook(salaryFile); // preloads apache poi, don't know why it needs to do that but ok
+        XSSFWorkbook load = new XSSFWorkbook(salaryFile); // preloads apache poi, not sure what its loading, but...
         String outFolder = "files/output";
-
         OutputStream outputStream = getStringOutputStream();
-
         // get a valid instance of LaborGenerator from builder
         LaborGenerator generator = null;
         try {
@@ -38,28 +36,11 @@ public class GUIController {
                     .setOutFolder(outFolder)
                     .setOutputLog(outputStream)
                     .build();
-        } catch (InFileException e) {
-            resultText.setText("There is a problem with the dailies file.");
-            return;
-        } catch (WorkCompFileException e) {
-            resultText.setText("There is a problem with the worker's comp file.");
-            return;
-        } catch (SalaryFileException e) {
-            resultText.setText("There is a problem with the salaries file.");
-            return;
-        } catch (OutFolderException e) {
-            resultText.setText("There is a problem with the output folder.");
-            return;
-        } catch (OutputLogException e) {
-            resultText.setText("There is a problem with the output log.");
-            return;
-        } catch (LaborGeneratorException e) {
-            resultText.setText("An unknown error occurred. Please run debug.bat...");
-            return;
+        } catch (Exception e) {
+            resultText.setText(e.getMessage());
+            System.out.println(e.getStackTrace());
         }
-
         generator.run();
-
         resultText.setText(outputStream.toString());
         outputStream.close();
     }

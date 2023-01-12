@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 /**
- * Formats data input by an instance of {@link LaborGenerator} for one {@link Workbook} and {@link Job}.
+ * Formats data input by an instance of {@link LaborGenerator} for one {@link Workbook} and one {@link Job}.
  * Creates a .xlsx file of the format [address].xlsx with a tab for each {@link Week} in the {@link Job}.
  */
 public class Formatter {
@@ -23,6 +23,11 @@ public class Formatter {
     int rowNum;
     int cellNum;
 
+    /**
+     *
+     * @param wb Target destination for the data.
+     * @param outFolder Target destination for the {@link Workbook}.
+     */
     public Formatter(Workbook wb, String outFolder) {
         this.wb = wb;
         this.outFolder = outFolder;

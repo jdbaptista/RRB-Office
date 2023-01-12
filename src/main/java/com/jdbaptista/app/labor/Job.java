@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Objects;
 
+/**
+ * Represents one client or address and all the data associated to it, mainly every {@link Week} for this job.
+ */
 public class Job {
     final private String address;
     final private ArrayList<Week> weeks;

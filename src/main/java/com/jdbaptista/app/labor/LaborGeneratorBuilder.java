@@ -15,6 +15,40 @@ public class LaborGeneratorBuilder {
     // optional parameters
     private OutputStream outputLog;
 
+    public LaborGenerator build() throws LaborGeneratorException {
+        // validate attributes
+        this.inFile = validateInFile(inFile);
+        this.workCompFile = validateWorkCompFile(workCompFile);
+        this.salaryFile = validateSalaryFile(salaryFile);
+        this.outputLog = validateOutputLog(outputLog);
+        return new LaborGenerator(this);
+    }
+
+    protected File validateInFile(File inFile) throws LaborGeneratorException {
+        return validateFile(inFile, "Dailies.xlsx");
+    }
+
+    protected File validateWorkCompFile(File workCompFile) throws LaborGeneratorException {
+        return validateFile(workCompFile, "WCPercentages.xlsx");
+    }
+
+    protected File validateSalaryFile(File salaryFile) throws LaborGeneratorException {
+        return validateFile(salaryFile, "Salaries.xlsx");
+    }
+
+    protected File validateFile(File file, String expectedName) throws LaborGeneratorException {
+        if (!salaryFile.canRead())
+            throw new LaborGeneratorException(file.getName() + " cannot be read!");
+        if (!salaryFile.getName().equals(expectedName))
+            throw new LaborGeneratorException(file.getAbsolutePath() + "is misnamed!");
+        return file;
+    }
+
+    protected OutputStream validateOutputLog(OutputStream outputLog) {
+        if (outputLog == null) return System.out;
+        return outputLog;
+    }
+
     public File getInFile() {
         return inFile;
     }
@@ -58,52 +92,5 @@ public class LaborGeneratorBuilder {
     public LaborGeneratorBuilder setOutputLog(OutputStream outputLog) {
         this.outputLog = outputLog;
         return this;
-    }
-
-    public LaborGenerator build() throws LaborGeneratorException {
-        // validate attributes
-        this.inFile = validateInFile(inFile);
-        this.workCompFile = validateWorkCompFile(workCompFile);
-        this.salaryFile = validateSalaryFile(salaryFile);
-        this.outFolder = validateOutFolder(outFolder);
-        this.outputLog = validateOutputLog(outputLog);
-
-        return new LaborGenerator(this);
-    }
-
-    protected File validateInFile(File inFile) throws InFileException {
-        if (!inFile.canRead())
-            throw new InFileException(inFile.getName() + " cannot be read!");
-        if (!inFile.getName().equals("Dailies.xlsx"))
-            throw new InFileException(inFile.getAbsolutePath() + "is misnamed!");
-
-        return inFile;
-    }
-
-    protected File validateWorkCompFile(File workCompFile) throws WorkCompFileException {
-        if (!workCompFile.canRead())
-            throw new WorkCompFileException(workCompFile.getName() + " cannot be read!");
-        if (!workCompFile.getName().equals("WCPercentages.xlsx"))
-            throw new WorkCompFileException(workCompFile.getAbsolutePath() + "is misnamed!");
-
-        return workCompFile;
-    }
-
-    protected File validateSalaryFile(File salaryFile) throws SalaryFileException {
-        if (!salaryFile.canRead())
-            throw new SalaryFileException(salaryFile.getName() + " cannot be read!");
-        if (!salaryFile.getName().equals("Salaries.xlsx"))
-            throw new SalaryFileException(salaryFile.getAbsolutePath() + "is misnamed!");
-
-        return salaryFile;
-    }
-
-    protected String validateOutFolder(String outFolder) {
-        return outFolder;
-    }
-
-    protected OutputStream validateOutputLog(OutputStream outputLog) {
-        if (outputLog == null) return System.out;
-        return outputLog;
     }
 }

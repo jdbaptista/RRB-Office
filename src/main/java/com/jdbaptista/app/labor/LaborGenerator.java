@@ -13,6 +13,11 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.IsoFields;
 import java.util.*;
 
+/**
+ * Contains functionality to take input data stored in excel files and create or override output excel files filled
+ * with business reports via the {@link LaborGenerator#run()} method. Relies on {@link LaborGeneratorBuilder} for
+ * validation and initialization of input parameters.
+ */
 public class LaborGenerator {
     // required attributes
     final private File inFile;
