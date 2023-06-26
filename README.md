@@ -1,7 +1,7 @@
 # RRB-Office
 This program was written for RRB Construction in 2021, and was ported to this repo later. Original commits are in a private repo.
 
-This is business software for small construction companies. If you plan to use this in production, be sure to know that this code is not well tested nor has any internal testing whatsoever. The testing that has been done was through manager scrutiny of numbers. The program's intended use is in quickly generating reports that are then confirmed by a manager. Testing was not implemented in the interest of development time under the assumption that numbers would be checked by the manager. I'm not responsible for any issues arising from use of this program.
+This is business software for small construction companies. If you plan to use this in production, be sure to know that this code is not formally tested. The testing that has been done was through manager scrutiny of numbers. The program's intended use is in quickly generating reports that are then confirmed by a manager. Testing was not implemented in the interest of development time under the assumption that numbers would be checked by the manager.
 
 That said, this program quickly generates nicely printable excel workbooks filled with reports about client and material costs which is useful in rough estimates of billing and analysis of project effectiveness. Take a look at the files folder for example input and output.
 
